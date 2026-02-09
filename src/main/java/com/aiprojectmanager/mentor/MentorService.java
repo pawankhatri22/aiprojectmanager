@@ -18,7 +18,7 @@ public class MentorService {
     }
 
     public Page<ProfileDtos.MentorProfileResponse> list(String search, Pageable pageable) {
-        return mentorProfileRepository.findByFullNameContainingIgnoreCase(search == null ? "" : search, pageable)
-                .map(profileService::toMentor);
+        String term = search == null ? "" : search.trim();
+        return mentorProfileRepository.searchByNameOrExpertise(term, pageable).map(profileService::toMentor);
     }
 }

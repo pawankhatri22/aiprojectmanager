@@ -25,7 +25,7 @@ public class AdminService {
 
     public Page<AdminDtos.SessionAdminResponse> sessions(Pageable p) {
         return sessionRepository.findAll(p).map(s -> new AdminDtos.SessionAdminResponse(s.getId(), s.getMentor().getId(), s.getGraduate().getId(),
-                s.getScheduledTime(), s.getDurationMinutes(), s.getPrice(), s.getStatus()));
+                s.getScheduledTime(), s.getDurationMinutes(), s.getPrice(), s.getStatus(), s.getConfirmationLink(), s.getMeetingLink()));
     }
 
     public Page<AdminDtos.PaymentAdminResponse> payments(Pageable p) {

@@ -11,7 +11,7 @@ import { MentorProfile } from '../../core/models/api.models';
     <div class="card">
       <h2>Mentor List</h2>
       <div class="row">
-        <input [formControl]="search.controls.q" placeholder="Search mentor name"/>
+        <input [formControl]="search.controls.q" placeholder="Search mentor by name or skill"/>
         <button style="width:auto" (click)="load()">Search</button>
       </div>
       <p *ngIf="message">{{message}}</p>
@@ -60,7 +60,7 @@ export class MentorListComponent implements OnInit {
 
   request(mentorId: number, scheduledTime: string, duration: string) {
     this.api.requestSession({ mentorId, scheduledTime, durationMinutes: Number(duration) || 60 }).subscribe({
-      next: () => this.message = 'Session request submitted',
+      next: () => this.message = 'Session request submitted. Mentor will approve and send confirmation/payment link.',
       error: (e) => this.message = e.error?.message ?? 'Session request failed'
     });
   }
