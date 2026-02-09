@@ -1,17 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { JsonPipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, JsonPipe, NgFor, NgIf } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
-import { MentorProfile } from '../../core/models/api.models';
+import { MentorProfile, ReviewItem } from '../../core/models/api.models';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, NgFor, NgIf, JsonPipe],
+  imports: [ReactiveFormsModule, NgFor, NgIf, JsonPipe, DatePipe],
   template: `
     <div class="card">
       <h2>Mentor List</h2>
       <div class="row">
         <input [formControl]="search.controls.q" placeholder="Search mentor by name or skill"/>
+        <select [formControl]="search.controls.sortBy" style="max-width:220px;">
+          <option value="">Default</option>
+          <option value="topRated">Top Rated</option>
+        </select>
         <button style="width:auto" (click)="load()">Search</button>
       </div>
       <p *ngIf="message">{{message}}</p>
@@ -19,12 +23,12 @@ import { MentorProfile } from '../../core/models/api.models';
 
     <div class="card" *ngFor="let mentor of mentors">
       <p><strong>{{mentor.fullName}}</strong> - {{mentor.jobTitle}} at {{mentor.company}}</p>
-      <p>Experience: {{mentor.yearsExperience}} years</p>
-      <p>Hourly: {{mentor.hourlyRate}}</p>
+      <p>Experience: {{mentor.yearsExperience}} years | Hourly: {{mentor.hourlyRate}} | ⭐ {{mentor.ratingAverage ?? 0}}</p>
+      <p>Skills: {{mentor.expertise.join(', ')}}</p>
       <input type="datetime-local" #dt>
       <input type="number" #dur placeholder="Duration (minutes)">
       <div class="row">
-        <button (click)="view(mentor.id)">View Profile</button>
+        <button (click)="view(mentor.id, mentor.userId)">View Profile</button>
         <button (click)="request(mentor.userId, dt.value, dur.value)">Request Session</button>
       </div>
     </div>
@@ -32,20 +36,26 @@ import { MentorProfile } from '../../core/models/api.models';
     <div class="card" *ngIf="selected">
       <h3>Mentor Profile</h3>
       <pre>{{selected | json}}</pre>
+      <h4>Reviews</h4>
+      <p *ngIf="!reviews.length">No reviews yet</p>
+      <div class="card" *ngFor="let r of reviews">
+        ⭐ {{r.rating}} - {{r.comment}} <small>({{r.createdAt | date:'short'}})</small>
+      </div>
     </div>
   `
 })
 export class MentorListComponent implements OnInit {
   mentors: MentorProfile[] = [];
   selected?: MentorProfile;
+  reviews: ReviewItem[] = [];
   message = '';
-  search = this.fb.group({ q: '' });
+  search = this.fb.group({ q: '', sortBy: '' });
   constructor(private fb: FormBuilder, private api: ApiService) {}
 
   ngOnInit(): void { this.load(); }
 
   load() {
-    this.api.getMentors(this.search.value.q ?? '', 0, 50).subscribe({
+    this.api.getMentors(this.search.value.q ?? '', 0, 50, this.search.value.sortBy ?? '').subscribe({
       next: (res) => {
         this.mentors = res.data.content;
         this.message = this.mentors.length ? '' : 'No mentors found yet. Ask a mentor to complete their profile from Mentor Dashboard.';
@@ -56,7 +66,10 @@ export class MentorListComponent implements OnInit {
     });
   }
 
-  view(id: number) { this.api.getMentor(id).subscribe(res => this.selected = res.data); }
+  view(id: number, mentorUserId: number) {
+    this.api.getMentor(id).subscribe(res => this.selected = res.data);
+    this.api.getMentorReviews(mentorUserId).subscribe(res => this.reviews = res.data);
+  }
 
   request(mentorId: number, scheduledTime: string, duration: string) {
     this.api.requestSession({ mentorId, scheduledTime, durationMinutes: Number(duration) || 60 }).subscribe({

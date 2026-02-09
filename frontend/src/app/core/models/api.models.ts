@@ -18,6 +18,7 @@ export interface SessionItem {
   confirmationLink?: string;
   meetingLink?: string;
 }
+export interface ReviewItem { id: number; sessionId: number; mentorId: number; graduateId: number; rating: number; comment: string; createdAt: string; }
 export interface MessageItem { id: number; sessionId: number; senderId: number; messageText: string; timestamp: string; }
 export interface PaymentItem { id: number; sessionId: number; amount: number; currency: string; status: string; transactionReference: string; timestamp: string; }
 export interface Page<T> { content: T[]; totalElements: number; totalPages: number; number: number; size: number; }
