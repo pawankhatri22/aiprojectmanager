@@ -21,3 +21,8 @@ npm start
 
 Backend API base URL is configured in:
 - `src/environments/environment.ts`
+
+## Behavior updates
+- Role-based routing and menu visibility for `GRADUATE`, `MENTOR`, `ADMIN`
+- Active login session auto-redirects to role home screen
+- Mentor discovery empty-state guidance and mentor profile setup in mentor dashboard

@@ -22,11 +22,20 @@ import { AuthService } from '../../core/services/auth.service';
 export class LoginComponent {
   message = '';
   form = this.fb.group({ email: ['', [Validators.required, Validators.email]], password: ['', Validators.required] });
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
+
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+    if (this.auth.isAuthenticated()) {
+      this.router.navigateByUrl(this.auth.homeForRole(this.auth.currentRole()));
+    }
+  }
+
   submit() {
     if (this.form.invalid) return;
     this.auth.login(this.form.getRawValue() as { email: string; password: string }).subscribe({
-      next: (res) => { this.auth.saveSession(res.data); this.router.navigateByUrl('/mentors'); },
+      next: (res) => {
+        this.auth.saveSession(res.data);
+        this.router.navigateByUrl(this.auth.homeForRole(res.data.role));
+      },
       error: (e) => this.message = e.error?.message ?? 'Login failed'
     });
   }

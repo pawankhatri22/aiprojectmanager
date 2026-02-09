@@ -14,6 +14,7 @@ import { MentorProfile } from '../../core/models/api.models';
         <input [formControl]="search.controls.q" placeholder="Search mentor name"/>
         <button style="width:auto" (click)="load()">Search</button>
       </div>
+      <p *ngIf="message">{{message}}</p>
     </div>
 
     <div class="card" *ngFor="let mentor of mentors">
@@ -37,12 +38,30 @@ import { MentorProfile } from '../../core/models/api.models';
 export class MentorListComponent implements OnInit {
   mentors: MentorProfile[] = [];
   selected?: MentorProfile;
+  message = '';
   search = this.fb.group({ q: '' });
   constructor(private fb: FormBuilder, private api: ApiService) {}
+
   ngOnInit(): void { this.load(); }
-  load() { this.api.getMentors(this.search.value.q ?? '').subscribe(res => this.mentors = res.data.content); }
+
+  load() {
+    this.api.getMentors(this.search.value.q ?? '', 0, 50).subscribe({
+      next: (res) => {
+        this.mentors = res.data.content;
+        this.message = this.mentors.length ? '' : 'No mentors found yet. Ask a mentor to complete their profile from Mentor Dashboard.';
+      },
+      error: (e) => {
+        this.message = e.error?.message ?? 'Failed to load mentors';
+      }
+    });
+  }
+
   view(id: number) { this.api.getMentor(id).subscribe(res => this.selected = res.data); }
+
   request(mentorId: number, scheduledTime: string, duration: string) {
-    this.api.requestSession({ mentorId, scheduledTime, durationMinutes: Number(duration) || 60 }).subscribe();
+    this.api.requestSession({ mentorId, scheduledTime, durationMinutes: Number(duration) || 60 }).subscribe({
+      next: () => this.message = 'Session request submitted',
+      error: (e) => this.message = e.error?.message ?? 'Session request failed'
+    });
   }
 }
