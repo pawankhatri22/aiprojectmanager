@@ -30,6 +30,11 @@ public class SessionController {
         return ResponseEntity.ok(ApiResponse.ok(service.cancel(id), "Session cancelled"));
     }
 
+    @PutMapping("/sessions/{id}/complete")
+    public ResponseEntity<ApiResponse<SessionDtos.SessionResponse>> complete(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(service.complete(id), "Session completed"));
+    }
+
     @GetMapping("/mentor/sessions")
     public ResponseEntity<ApiResponse<Page<SessionDtos.SessionResponse>>> mentorSessions(@RequestParam(defaultValue = "0") int page,
                                                                                           @RequestParam(defaultValue = "10") int size) {

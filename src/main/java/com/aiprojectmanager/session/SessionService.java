@@ -62,6 +62,7 @@ public class SessionService {
     public SessionDtos.SessionResponse approve(Long id) { return updateStatus(id, SessionStatus.PENDING_PAYMENT, Role.MENTOR); }
     public SessionDtos.SessionResponse reject(Long id) { return updateStatus(id, SessionStatus.REJECTED, Role.MENTOR); }
     public SessionDtos.SessionResponse markPaid(Long id) { return updateStatus(id, SessionStatus.PAID, Role.GRADUATE); }
+    public SessionDtos.SessionResponse complete(Long id) { return updateStatus(id, SessionStatus.COMPLETED, Role.GRADUATE); }
 
     private SessionDtos.SessionResponse updateStatus(Long id, SessionStatus status, Role requiredRole) {
         var user = currentUserService.get();
@@ -71,6 +72,7 @@ public class SessionService {
         if (requiredRole == Role.MENTOR && !s.getMentor().getId().equals(user.getId())) throw new IllegalArgumentException("Not your session");
         if (status == SessionStatus.CANCELLED && !s.getGraduate().getId().equals(user.getId())) throw new IllegalArgumentException("Only graduate can cancel");
         if (status == SessionStatus.PAID && !s.getGraduate().getId().equals(user.getId())) throw new IllegalArgumentException("Only graduate can complete payment");
+        if (status == SessionStatus.COMPLETED && !s.getGraduate().getId().equals(user.getId())) throw new IllegalArgumentException("Only graduate can mark complete");
 
         if (status == SessionStatus.PENDING_PAYMENT) {
             if (s.getStatus() != SessionStatus.REQUESTED) throw new IllegalArgumentException("Only requested sessions can be approved");
@@ -81,6 +83,10 @@ public class SessionService {
             if (s.getStatus() != SessionStatus.PENDING_PAYMENT) throw new IllegalArgumentException("Session must be pending payment");
             ensureNoPaidConflict(s.getMentor().getId(), s.getScheduledTime(), s.getDurationMinutes(), s.getId());
             s.setMeetingLink("https://meet.aiprojectmanager.local/room/" + UUID.randomUUID());
+        }
+
+        if (status == SessionStatus.COMPLETED) {
+            if (s.getStatus() != SessionStatus.PAID) throw new IllegalArgumentException("Only paid session can be marked complete");
         }
 
         s.setStatus(status);

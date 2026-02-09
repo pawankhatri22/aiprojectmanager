@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { SessionItem } from '../../core/models/api.models';
 
 @Component({
   standalone: true,
-  imports: [NgFor, NgIf, DatePipe],
+  imports: [NgFor, NgIf, DatePipe, FormsModule],
   template: `
     <div class="grid grid-2">
       <div class="card">
@@ -23,20 +24,30 @@ import { SessionItem } from '../../core/models/api.models';
           <h3>Recent Sessions</h3>
           <p *ngIf="message">{{message}}</p>
           <table class="table">
-            <tr><th>ID</th><th>Status</th><th>Time</th><th>Price</th><th>Confirmation</th><th>Meeting</th><th>Action</th></tr>
+            <tr><th>ID</th><th>Status</th><th>Time</th><th>Price</th><th>Links</th><th>Actions</th></tr>
             <tr *ngFor="let s of sessions">
               <td>{{s.id}}</td>
               <td>{{s.status}}</td>
               <td>{{s.scheduledTime | date:'short'}}</td>
               <td>{{s.price}}</td>
-              <td><a *ngIf="s.confirmationLink" [href]="s.confirmationLink" target="_blank">Confirm</a></td>
-              <td><a *ngIf="s.meetingLink" [href]="s.meetingLink" target="_blank">Join</a></td>
+              <td>
+                <a *ngIf="s.confirmationLink" [href]="s.confirmationLink" target="_blank">Confirm</a>
+                <a *ngIf="s.meetingLink" [href]="s.meetingLink" target="_blank" style="margin-left:6px;">Join</a>
+              </td>
               <td>
                 <button *ngIf="s.status==='PENDING_PAYMENT'" (click)="pay(s.id)">Pay</button>
+                <button *ngIf="s.status==='PAID'" (click)="complete(s.id)">Mark Complete</button>
                 <button *ngIf="s.status==='REQUESTED'" class="secondary" (click)="cancel(s.id)">Cancel</button>
               </td>
             </tr>
           </table>
+
+          <div class="card" *ngFor="let s of reviewEligibleSessions()">
+            <h4>Leave review for Session #{{s.id}}</h4>
+            <input type="number" min="1" max="5" [(ngModel)]="reviewRating[s.id]" placeholder="Rating (1-5)">
+            <textarea [(ngModel)]="reviewComment[s.id]" placeholder="Comment"></textarea>
+            <button (click)="submitReview(s.id)">Submit Review</button>
+          </div>
         </div>
       </div>
     </div>
@@ -45,6 +56,8 @@ import { SessionItem } from '../../core/models/api.models';
 export class GraduateDashboardComponent implements OnInit {
   sessions: SessionItem[] = [];
   message = '';
+  reviewRating: Record<number, number> = {};
+  reviewComment: Record<number, string> = {};
 
   constructor(private api: ApiService) {}
 
@@ -58,6 +71,14 @@ export class GraduateDashboardComponent implements OnInit {
     return this.sessions
       .filter(s => s.status === 'PAID')
       .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))[0];
+  }
+
+  reviewEligibleSessions(): SessionItem[] {
+    const now = Date.now();
+    return this.sessions.filter(s => {
+      const end = new Date(s.scheduledTime).getTime() + s.durationMinutes * 60 * 1000;
+      return s.status === 'COMPLETED' || (s.status === 'PAID' && now > end);
+    });
   }
 
   load() {
@@ -74,6 +95,13 @@ export class GraduateDashboardComponent implements OnInit {
     });
   }
 
+  complete(id: number) {
+    this.api.completeSession(id).subscribe({
+      next: () => { this.message = 'Session marked complete'; this.load(); },
+      error: (e) => this.message = e.error?.message ?? 'Complete failed'
+    });
+  }
+
   pay(id: number) {
     this.api.pay(id).subscribe({
       next: () => {
@@ -81,6 +109,19 @@ export class GraduateDashboardComponent implements OnInit {
         this.load();
       },
       error: (e) => this.message = e.error?.message ?? 'Payment failed'
+    });
+  }
+
+  submitReview(sessionId: number) {
+    const rating = Number(this.reviewRating[sessionId] || 0);
+    const comment = (this.reviewComment[sessionId] || '').trim();
+    if (rating < 1 || rating > 5 || !comment) {
+      this.message = 'Please provide rating (1-5) and comment';
+      return;
+    }
+    this.api.createReview({ sessionId, rating, comment }).subscribe({
+      next: () => { this.message = 'Review submitted'; this.load(); },
+      error: (e) => this.message = e.error?.message ?? 'Review failed'
     });
   }
 }
