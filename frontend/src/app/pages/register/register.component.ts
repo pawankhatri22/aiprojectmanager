@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
+import { AppRole, AuthService } from '../../core/services/auth.service';
 
 @Component({
   standalone: true,
@@ -25,12 +25,16 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class RegisterComponent {
   message = '';
-  form = this.fb.group({ email: ['', [Validators.required, Validators.email]], password: ['', Validators.required], role: ['GRADUATE', Validators.required] });
+  form = this.fb.group({ email: ['', [Validators.required, Validators.email]], password: ['', Validators.required], role: ['GRADUATE' as AppRole, Validators.required] });
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
+
   submit() {
     if (this.form.invalid) return;
-    this.auth.register(this.form.getRawValue() as { email: string; password: string; role: string }).subscribe({
-      next: () => { this.message = 'Registered. Please login.'; this.router.navigateByUrl('/login'); },
+    this.auth.register(this.form.getRawValue() as { email: string; password: string; role: AppRole }).subscribe({
+      next: () => {
+        this.message = 'Registered. Please login.';
+        this.router.navigateByUrl('/login');
+      },
       error: (e) => this.message = e.error?.message ?? 'Register failed'
     });
   }
