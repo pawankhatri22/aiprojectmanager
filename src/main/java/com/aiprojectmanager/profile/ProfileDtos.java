@@ -1,13 +1,15 @@
 package com.aiprojectmanager.profile;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public class ProfileDtos {
     public record MentorProfileRequest(@NotBlank String fullName, String company, String jobTitle, Integer yearsExperience,
-                                       String bio, BigDecimal hourlyRate, String photoUrl, List<String> expertise) {}
+                                       String bio, @NotNull @DecimalMin("1.0") BigDecimal hourlyRate, String photoUrl, List<String> expertise) {}
     public record MentorProfileResponse(Long id, Long userId, String fullName, String company, String jobTitle,
                                         Integer yearsExperience, String bio, BigDecimal hourlyRate, Double ratingAverage,
                                         String photoUrl, List<String> expertise) {}

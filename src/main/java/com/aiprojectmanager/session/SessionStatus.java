@@ -1,5 +1,10 @@
 package com.aiprojectmanager.session;
 
 public enum SessionStatus {
-    REQUESTED, APPROVED, REJECTED, CANCELLED, COMPLETED
+    REQUESTED,
+    PENDING_PAYMENT,
+    PAID,
+    REJECTED,
+    CANCELLED,
+    COMPLETED
 }

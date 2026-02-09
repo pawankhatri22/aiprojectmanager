@@ -26,5 +26,8 @@ public class Session {
 
     @Enumerated(EnumType.STRING)
     private SessionStatus status;
+
+    private String confirmationLink;
+    private String meetingLink;
     private LocalDateTime createdAt;
 }

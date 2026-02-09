@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 public class AdminDtos {
     public record UserAdminResponse(Long id, String email, Role role, boolean enabled, LocalDateTime createdAt) {}
     public record SessionAdminResponse(Long id, Long mentorId, Long graduateId, LocalDateTime scheduledTime,
-                                       Integer durationMinutes, BigDecimal price, SessionStatus status) {}
+                                       Integer durationMinutes, BigDecimal price, SessionStatus status,
+                                       String confirmationLink, String meetingLink) {}
     public record PaymentAdminResponse(Long id, Long sessionId, BigDecimal amount, String currency,
                                        PaymentStatus status, String transactionReference, LocalDateTime timestamp) {}
 }

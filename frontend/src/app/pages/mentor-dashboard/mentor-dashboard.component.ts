@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { NgFor } from '@angular/common';
+import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { SessionItem } from '../../core/models/api.models';
 
 @Component({
   standalone: true,
-  imports: [NgFor, ReactiveFormsModule],
+  imports: [NgFor, ReactiveFormsModule, NgIf, DatePipe],
   template: `
     <div class="card">
       <h2>Mentor Profile</h2>
@@ -16,23 +16,29 @@ import { SessionItem } from '../../core/models/api.models';
         <input formControlName="jobTitle" placeholder="Job title">
         <input formControlName="yearsExperience" type="number" placeholder="Years experience">
         <textarea formControlName="bio" placeholder="Bio"></textarea>
-        <input formControlName="hourlyRate" type="number" placeholder="Hourly rate">
+        <input formControlName="hourlyRate" type="number" placeholder="Hourly rate (required)">
         <input formControlName="photoUrl" placeholder="Photo URL">
-        <input formControlName="expertise" placeholder="Expertise tags comma separated">
+        <input formControlName="expertise" placeholder="Skills / expertise comma separated">
         <button>Save Profile</button>
       </form>
       <p>{{message}}</p>
     </div>
 
     <div class="card">
-      <h2>Mentor Dashboard</h2>
+      <h2>Mentor Sessions</h2>
       <table class="table">
-        <tr><th>ID</th><th>Graduate</th><th>Time</th><th>Status</th><th>Actions</th></tr>
+        <tr><th>ID</th><th>Graduate</th><th>Time</th><th>Status</th><th>Price</th><th>Confirmation</th><th>Meeting</th><th>Actions</th></tr>
         <tr *ngFor="let s of sessions">
-          <td>{{s.id}}</td><td>{{s.graduateId}}</td><td>{{s.scheduledTime}}</td><td>{{s.status}}</td>
+          <td>{{s.id}}</td>
+          <td>{{s.graduateId}}</td>
+          <td>{{s.scheduledTime | date:'short'}}</td>
+          <td>{{s.status}}</td>
+          <td>{{s.price}}</td>
+          <td><a *ngIf="s.confirmationLink" [href]="s.confirmationLink" target="_blank">Sent</a></td>
+          <td><a *ngIf="s.meetingLink" [href]="s.meetingLink" target="_blank">Open</a></td>
           <td class="row">
-            <button (click)="approve(s.id)">Approve</button>
-            <button class="secondary" (click)="reject(s.id)">Reject</button>
+            <button (click)="approve(s.id)" *ngIf="s.status==='REQUESTED'">Approve</button>
+            <button class="secondary" (click)="reject(s.id)" *ngIf="s.status==='REQUESTED'">Reject</button>
           </td>
         </tr>
       </table>
@@ -57,8 +63,8 @@ export class MentorDashboardComponent implements OnInit {
 
   ngOnInit(): void { this.load(); }
   load() { this.api.mentorSessions().subscribe(r => this.sessions = r.data.content); }
-  approve(id: number) { this.api.approveSession(id).subscribe(() => this.load()); }
-  reject(id: number) { this.api.rejectSession(id).subscribe(() => this.load()); }
+  approve(id: number) { this.api.approveSession(id).subscribe({ next: () => this.load(), error: (e) => this.message = e.error?.message ?? 'Approve failed' }); }
+  reject(id: number) { this.api.rejectSession(id).subscribe({ next: () => this.load(), error: (e) => this.message = e.error?.message ?? 'Reject failed' }); }
 
   saveProfile() {
     if (this.profileForm.invalid) return;
@@ -70,7 +76,7 @@ export class MentorDashboardComponent implements OnInit {
       expertise: (v.expertise ?? '').split(',').map(x => x.trim()).filter(Boolean)
     };
     this.api.upsertMentorProfile(body).subscribe({
-      next: () => this.message = 'Profile saved. Graduates can now discover you.',
+      next: () => this.message = 'Profile and hourly rate saved. Graduates can now discover you by name or skill.',
       error: (e) => this.message = e.error?.message ?? 'Could not save profile'
     });
   }
