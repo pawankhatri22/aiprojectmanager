@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:aiprojectmanager;DB_CLOSE_DELAY=-1
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+app:
+  jwt:
+    secret: verysecretkeyverysecretkeyverysecretkey12345
+    expiration-ms: 86400000
+  meeting:
+    zoom:
+      base-url: ${ZOOM_API_BASE_URL:https://api.zoom.us/v2}
+      jwt-token: ${ZOOM_JWT_TOKEN:}
+      user-id: ${ZOOM_USER_ID:me}
