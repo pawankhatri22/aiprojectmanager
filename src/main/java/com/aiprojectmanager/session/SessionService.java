@@ -1,5 +1,6 @@
 package com.aiprojectmanager.session;
 
+import com.aiprojectmanager.meeting.MeetingLinkService;
 import com.aiprojectmanager.profile.MentorProfileRepository;
 import com.aiprojectmanager.user.CurrentUserService;
 import com.aiprojectmanager.user.Role;
@@ -20,12 +21,14 @@ public class SessionService {
     private final CurrentUserService currentUserService;
     private final UserRepository userRepository;
     private final MentorProfileRepository mentorProfileRepository;
+    private final MeetingLinkService meetingLinkService;
 
-    public SessionService(SessionRepository sessionRepository, CurrentUserService currentUserService, UserRepository userRepository, MentorProfileRepository mentorProfileRepository) {
+    public SessionService(SessionRepository sessionRepository, CurrentUserService currentUserService, UserRepository userRepository, MentorProfileRepository mentorProfileRepository, MeetingLinkService meetingLinkService) {
         this.sessionRepository = sessionRepository;
         this.currentUserService = currentUserService;
         this.userRepository = userRepository;
         this.mentorProfileRepository = mentorProfileRepository;
+        this.meetingLinkService = meetingLinkService;
     }
 
     public SessionDtos.SessionResponse request(SessionDtos.RequestSessionRequest req) {
@@ -82,7 +85,7 @@ public class SessionService {
         if (status == SessionStatus.PAID) {
             if (s.getStatus() != SessionStatus.PENDING_PAYMENT) throw new IllegalArgumentException("Session must be pending payment");
             ensureNoPaidConflict(s.getMentor().getId(), s.getScheduledTime(), s.getDurationMinutes(), s.getId());
-            s.setMeetingLink("https://meet.aiprojectmanager.local/room/" + UUID.randomUUID());
+            s.setMeetingLink(meetingLinkService.createMeetingLink(s));
         }
 
         if (status == SessionStatus.COMPLETED) {

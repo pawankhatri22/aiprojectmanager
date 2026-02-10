@@ -11,14 +11,30 @@ import { SessionItem } from '../../core/models/api.models';
     <div class="card">
       <h2>Mentor Profile</h2>
       <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
-        <input formControlName="fullName" placeholder="Full name">
-        <input formControlName="company" placeholder="Company">
-        <input formControlName="jobTitle" placeholder="Job title">
-        <input formControlName="yearsExperience" type="number" placeholder="Years experience">
-        <textarea formControlName="bio" placeholder="Bio"></textarea>
-        <input formControlName="hourlyRate" type="number" placeholder="Hourly rate (required)">
-        <input formControlName="photoUrl" placeholder="Photo URL">
-        <input formControlName="expertise" placeholder="Skills / expertise comma separated">
+        <label>Full Name</label>
+        <input formControlName="fullName" placeholder="e.g. Sarah Johnson">
+
+        <label>Company</label>
+        <input formControlName="company" placeholder="e.g. Google">
+
+        <label>Job Title</label>
+        <input formControlName="jobTitle" placeholder="e.g. Senior Software Engineer">
+
+        <label>Years of Experience</label>
+        <input formControlName="yearsExperience" type="number" placeholder="e.g. 8">
+
+        <label>Bio</label>
+        <textarea formControlName="bio" placeholder="Write a short intro about your mentoring focus and background"></textarea>
+
+        <label>Hourly Rate (USD)</label>
+        <input formControlName="hourlyRate" type="number" placeholder="e.g. 75">
+
+        <label>Photo URL</label>
+        <input formControlName="photoUrl" placeholder="https://...">
+
+        <label>Skills / Expertise (comma separated)</label>
+        <input formControlName="expertise" placeholder="System Design, Java, Interview Prep">
+
         <button>Save Profile</button>
       </form>
       <p>{{message}}</p>
@@ -61,10 +77,43 @@ export class MentorDashboardComponent implements OnInit {
 
   constructor(private api: ApiService, private fb: FormBuilder) {}
 
-  ngOnInit(): void { this.load(); }
-  load() { this.api.mentorSessions().subscribe(r => this.sessions = r.data.content); }
-  approve(id: number) { this.api.approveSession(id).subscribe({ next: () => this.load(), error: (e) => this.message = e.error?.message ?? 'Approve failed' }); }
-  reject(id: number) { this.api.rejectSession(id).subscribe({ next: () => this.load(), error: (e) => this.message = e.error?.message ?? 'Reject failed' }); }
+  ngOnInit(): void {
+    this.load();
+    this.loadProfile();
+  }
+
+  load() {
+    this.api.mentorSessions().subscribe(r => this.sessions = r.data.content);
+  }
+
+  loadProfile() {
+    this.api.getMyMentorProfile().subscribe({
+      next: (res) => {
+        const p = res.data;
+        this.profileForm.patchValue({
+          fullName: p.fullName,
+          company: p.company,
+          jobTitle: p.jobTitle,
+          yearsExperience: p.yearsExperience,
+          bio: p.bio,
+          hourlyRate: p.hourlyRate,
+          photoUrl: p.photoUrl,
+          expertise: (p.expertise ?? []).join(', ')
+        });
+      },
+      error: () => {
+        // mentor may not have profile yet
+      }
+    });
+  }
+
+  approve(id: number) {
+    this.api.approveSession(id).subscribe({ next: () => this.load(), error: (e) => this.message = e.error?.message ?? 'Approve failed' });
+  }
+
+  reject(id: number) {
+    this.api.rejectSession(id).subscribe({ next: () => this.load(), error: (e) => this.message = e.error?.message ?? 'Reject failed' });
+  }
 
   saveProfile() {
     if (this.profileForm.invalid) return;
@@ -76,7 +125,10 @@ export class MentorDashboardComponent implements OnInit {
       expertise: (v.expertise ?? '').split(',').map(x => x.trim()).filter(Boolean)
     };
     this.api.upsertMentorProfile(body).subscribe({
-      next: () => this.message = 'Profile and hourly rate saved. Graduates can now discover you by name or skill.',
+      next: () => {
+        this.message = 'Profile saved and persisted.';
+        this.loadProfile();
+      },
       error: (e) => this.message = e.error?.message ?? 'Could not save profile'
     });
   }

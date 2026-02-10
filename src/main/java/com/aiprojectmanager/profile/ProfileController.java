@@ -22,6 +22,11 @@ public class ProfileController {
         return ResponseEntity.ok(ApiResponse.ok(service.upsertMentor(req), "Mentor profile updated"));
     }
 
+    @GetMapping("/mentor/profile")
+    public ResponseEntity<ApiResponse<ProfileDtos.MentorProfileResponse>> getMentor() {
+        return ResponseEntity.ok(ApiResponse.ok(service.myMentorProfile(), "Mentor profile"));
+    }
+
     @GetMapping("/graduate/profile")
     public ResponseEntity<ApiResponse<ProfileDtos.GraduateProfileResponse>> getGrad() {
         return ResponseEntity.ok(ApiResponse.ok(service.myGraduateProfile(), "Graduate profile"));

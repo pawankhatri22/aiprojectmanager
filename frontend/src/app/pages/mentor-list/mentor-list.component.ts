@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe, JsonPipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { MentorProfile, ReviewItem } from '../../core/models/api.models';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, NgFor, NgIf, JsonPipe, DatePipe],
+  imports: [ReactiveFormsModule, NgFor, NgIf, DatePipe],
   template: `
     <div class="card">
       <h2>Mentor List</h2>
@@ -34,8 +34,14 @@ import { MentorProfile, ReviewItem } from '../../core/models/api.models';
     </div>
 
     <div class="card" *ngIf="selected">
-      <h3>Mentor Profile</h3>
-      <pre>{{selected | json}}</pre>
+      <h3>{{selected.fullName}}</h3>
+      <p><strong>Role:</strong> {{selected.jobTitle}} at {{selected.company}}</p>
+      <p><strong>Experience:</strong> {{selected.yearsExperience}} years</p>
+      <p><strong>Hourly Rate:</strong> {{selected.hourlyRate}}</p>
+      <p><strong>Rating:</strong> ⭐ {{selected.ratingAverage ?? 0}}</p>
+      <p><strong>Bio:</strong> {{selected.bio || 'No bio provided'}}</p>
+      <p><strong>Skills:</strong> {{selected.expertise.join(', ') || 'N/A'}}</p>
+
       <h4>Reviews</h4>
       <p *ngIf="!reviews.length">No reviews yet</p>
       <div class="card" *ngFor="let r of reviews">
@@ -50,6 +56,7 @@ export class MentorListComponent implements OnInit {
   reviews: ReviewItem[] = [];
   message = '';
   search = this.fb.group({ q: '', sortBy: '' });
+
   constructor(private fb: FormBuilder, private api: ApiService) {}
 
   ngOnInit(): void { this.load(); }
