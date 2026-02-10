@@ -5,6 +5,7 @@ import com.aiprojectmanager.profile.MentorProfileRepository;
 import com.aiprojectmanager.user.CurrentUserService;
 import com.aiprojectmanager.user.Role;
 import com.aiprojectmanager.user.UserRepository;
+import com.aiprojectmanager.zoom.ZoomApiService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,14 +22,14 @@ public class SessionService {
     private final CurrentUserService currentUserService;
     private final UserRepository userRepository;
     private final MentorProfileRepository mentorProfileRepository;
-    private final MeetingLinkService meetingLinkService;
+    private final ZoomApiService zoomApiService;
 
-    public SessionService(SessionRepository sessionRepository, CurrentUserService currentUserService, UserRepository userRepository, MentorProfileRepository mentorProfileRepository, MeetingLinkService meetingLinkService) {
+    public SessionService(SessionRepository sessionRepository, CurrentUserService currentUserService, UserRepository userRepository, MentorProfileRepository mentorProfileRepository, ZoomApiService zoomApiService) {
         this.sessionRepository = sessionRepository;
         this.currentUserService = currentUserService;
         this.userRepository = userRepository;
         this.mentorProfileRepository = mentorProfileRepository;
-        this.meetingLinkService = meetingLinkService;
+        this.zoomApiService = zoomApiService;
     }
 
     public SessionDtos.SessionResponse request(SessionDtos.RequestSessionRequest req) {
@@ -85,7 +86,8 @@ public class SessionService {
         if (status == SessionStatus.PAID) {
             if (s.getStatus() != SessionStatus.PENDING_PAYMENT) throw new IllegalArgumentException("Session must be pending payment");
             ensureNoPaidConflict(s.getMentor().getId(), s.getScheduledTime(), s.getDurationMinutes(), s.getId());
-            s.setMeetingLink(meetingLinkService.createMeetingLink(s));
+            String meetingLink = zoomApiService.createMeeting();
+            s.setMeetingLink(meetingLink!=null? meetingLink:"Creating Meeting link taking time, will send link on you email soon!");
         }
 
         if (status == SessionStatus.COMPLETED) {

@@ -18,6 +18,15 @@ app:
     expiration-ms: 86400000
   meeting:
     google:
-      api-key: ${GOOGLE_MEET_API_KEY:}
-      oauth-token: ${GOOGLE_MEET_OAUTH_TOKEN:}
+      api-key: ${GOOGLE_MEET_API_KEY:AIzaSyDtvtdvtoHkVeIoMnyIxLr0jXOXq4QYoA0}
+      oauth-token: ${GOOGLE_MEET_OAUTH_TOKEN:12}
       calendar-id: ${GOOGLE_MEET_CALENDAR_ID:primary}
+
+
+zoom:
+  oauth2:
+    issuer: https://zoom.us/oauth
+    client-id: kuZ0bwmTXun9wtuG0lGMQ
+    client-secret: 7K44ztoOmBehDGDoZ7WTH7BYROzVCimM
+    account-id: PI-bxqUmRbezJtQxsO_Nfg
+    api-url: https://api.zoom.us
