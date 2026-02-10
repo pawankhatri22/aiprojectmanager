@@ -16,3 +16,8 @@ app:
   jwt:
     secret: verysecretkeyverysecretkeyverysecretkey12345
     expiration-ms: 86400000
+  meeting:
+    google:
+      api-key: ${GOOGLE_MEET_API_KEY:}
+      oauth-token: ${GOOGLE_MEET_OAUTH_TOKEN:}
+      calendar-id: ${GOOGLE_MEET_CALENDAR_ID:primary}

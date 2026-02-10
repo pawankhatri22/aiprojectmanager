@@ -39,6 +39,13 @@ public class ProfileService {
         return toGraduate(graduateRepo.save(profile));
     }
 
+
+    public ProfileDtos.MentorProfileResponse myMentorProfile() {
+        var user = currentUserService.get();
+        if (user.getRole() != Role.MENTOR) throw new IllegalArgumentException("Mentor role required");
+        return toMentor(mentorRepo.findByUserId(user.getId()).orElseThrow(() -> new IllegalArgumentException("Profile not found")));
+    }
+
     public ProfileDtos.GraduateProfileResponse myGraduateProfile() {
         var user = currentUserService.get();
         return toGraduate(graduateRepo.findByUserId(user.getId()).orElseThrow(() -> new IllegalArgumentException("Profile not found")));
