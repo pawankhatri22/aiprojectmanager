@@ -128,8 +128,8 @@ public class SessionService {
 
     public SessionDtos.SessionResponse toDto(Session s) {
         return new SessionDtos.SessionResponse(
-                s.getId(), s.getMentor().getId(), s.getGraduate().getId(), s.getScheduledTime(),
-                s.getDurationMinutes(), s.getPrice(), s.getStatus(), s.getConfirmationLink(), s.getMeetingLink()
+                s.getId(), s.getMentor().getId(), s.getGraduate().getId(), s.getMentor().getEmail(), s.getGraduate().getEmail(),
+                s.getScheduledTime(), s.getDurationMinutes(), s.getPrice(), s.getStatus(), s.getConfirmationLink(), s.getMeetingLink()
         );
     }
 }

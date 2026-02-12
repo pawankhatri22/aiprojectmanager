@@ -35,4 +35,9 @@ public class MentorController {
     public ResponseEntity<ApiResponse<ProfileDtos.MentorProfileResponse>> byId(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(profileService.mentorById(id), "Mentor details"));
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<ProfileDtos.MentorProfileResponse>> byUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(ApiResponse.ok(profileService.mentorByUserId(userId), "Mentor details"));
+    }
 }

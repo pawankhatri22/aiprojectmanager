@@ -11,6 +11,7 @@ export class ApiService {
     return this.http.get<ApiResponse<Page<MentorProfile>>>(`${environment.apiUrl}/mentors?search=${encodeURIComponent(search)}&page=${page}&size=${size}&sortBy=${encodeURIComponent(sortBy)}`);
   }
   getMentor(id: number) { return this.http.get<ApiResponse<MentorProfile>>(`${environment.apiUrl}/mentors/${id}`); }
+  getMentorByUserId(userId: number) { return this.http.get<ApiResponse<MentorProfile>>(`${environment.apiUrl}/mentors/user/${userId}`); }
   getMyMentorProfile() { return this.http.get<ApiResponse<MentorProfile>>(`${environment.apiUrl}/mentor/profile`); }
   getMentorReviews(mentorUserId: number) { return this.http.get<ApiResponse<ReviewItem[]>>(`${environment.apiUrl}/reviews/mentor/${mentorUserId}`); }
   upsertMentorProfile(body: unknown, create = false) { return create ? this.http.post<ApiResponse<MentorProfile>>(`${environment.apiUrl}/mentor/profile`, body) : this.http.put<ApiResponse<MentorProfile>>(`${environment.apiUrl}/mentor/profile`, body); }

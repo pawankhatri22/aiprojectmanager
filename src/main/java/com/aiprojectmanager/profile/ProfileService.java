@@ -55,6 +55,10 @@ public class ProfileService {
         return toMentor(mentorRepo.findById(id).orElseThrow(() -> new IllegalArgumentException("Mentor not found")));
     }
 
+    public ProfileDtos.MentorProfileResponse mentorByUserId(Long userId) {
+        return toMentor(mentorRepo.findByUserId(userId).orElseThrow(() -> new IllegalArgumentException("Mentor not found")));
+    }
+
     public ProfileDtos.MentorProfileResponse toMentor(MentorProfile p) {
         return new ProfileDtos.MentorProfileResponse(p.getId(), p.getUser().getId(), p.getFullName(), p.getCompany(), p.getJobTitle(),
                 p.getYearsExperience(), p.getBio(), p.getHourlyRate(), p.getRatingAverage(), p.getPhotoUrl(),

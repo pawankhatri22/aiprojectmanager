@@ -46,7 +46,7 @@ import { AttendanceItem, NotificationItem, RescheduleItem, SessionItem } from '.
         <tr><th>ID</th><th>Graduate</th><th>Time</th><th>Status</th><th>Price</th><th>Meeting</th><th>Actions</th></tr>
         <tr *ngFor="let s of sessions">
           <td>{{s.id}}</td>
-          <td>{{s.graduateId}}</td>
+          <td>{{s.graduateEmail || s.graduateId}}</td>
           <td>{{s.scheduledTime | date:'short'}}</td>
           <td>{{s.status}}</td>
           <td>{{s.price}}</td>

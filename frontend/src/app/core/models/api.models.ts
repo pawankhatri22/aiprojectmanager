@@ -11,6 +11,8 @@ export interface SessionItem {
   id: number;
   mentorId: number;
   graduateId: number;
+  mentorEmail?: string;
+  graduateEmail?: string;
   scheduledTime: string;
   durationMinutes: number;
   price: number;

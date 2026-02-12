@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class SessionDtos {
     public record RequestSessionRequest(@NotNull Long mentorId, @Future LocalDateTime scheduledTime, @Min(15) Integer durationMinutes) {}
 
-    public record SessionResponse(Long id, Long mentorId, Long graduateId, LocalDateTime scheduledTime,
-                                  Integer durationMinutes, BigDecimal price, SessionStatus status,
+    public record SessionResponse(Long id, Long mentorId, Long graduateId, String mentorEmail, String graduateEmail,
+                                  LocalDateTime scheduledTime, Integer durationMinutes, BigDecimal price, SessionStatus status,
                                   String confirmationLink, String meetingLink) {}
 }

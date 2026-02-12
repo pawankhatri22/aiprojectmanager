@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
-import { NotificationItem, SessionItem } from '../../core/models/api.models';
+import { MentorProfile, NotificationItem, SessionItem } from '../../core/models/api.models';
 
 @Component({
   standalone: true,
@@ -27,12 +27,16 @@ import { NotificationItem, SessionItem } from '../../core/models/api.models';
           <p *ngIf="nextSession">Next Paid Session: #{{nextSession.id}} at {{nextSession.scheduledTime | date:'short'}}</p>
         </div>
         <div class="card">
-          <h3>Recent Sessions</h3>
+          <h3>Recent Sessions (My Sessions)</h3>
           <p *ngIf="message">{{message}}</p>
           <table class="table">
-            <tr><th>ID</th><th>Status</th><th>Time</th><th>Price</th><th>Links</th><th>Actions</th></tr>
+            <tr><th>ID</th><th>Mentor</th><th>Status</th><th>Time</th><th>Price</th><th>Links</th><th>Actions</th></tr>
             <tr *ngFor="let s of sessions">
               <td>{{s.id}}</td>
+              <td>
+                {{s.mentorEmail || s.mentorId}}
+                <button class="secondary" (click)="viewMentor(s.mentorId)">View</button>
+              </td>
               <td>{{s.status}}</td>
               <td>{{s.scheduledTime | date:'short'}}</td>
               <td>{{s.price}}</td>
@@ -65,11 +69,21 @@ import { NotificationItem, SessionItem } from '../../core/models/api.models';
         </div>
       </div>
     </div>
+
+    <div class="card" *ngIf="selectedMentor">
+      <h3>Mentor Profile</h3>
+      <p><b>{{selectedMentor.fullName}}</b> (⭐ {{selectedMentor.ratingAverage ?? 0}})</p>
+      <p>{{selectedMentor.jobTitle}} at {{selectedMentor.company}}</p>
+      <p>{{selectedMentor.bio}}</p>
+      <p>Skills: {{selectedMentor.expertise.join(', ')}}</p>
+      <button class="secondary" (click)="selectedMentor=undefined">Close</button>
+    </div>
   `
 })
 export class GraduateDashboardComponent implements OnInit {
   sessions: SessionItem[] = [];
   notifications: NotificationItem[] = [];
+  selectedMentor?: MentorProfile;
   message = '';
   reviewRating: Record<number, number> = {};
   reviewComment: Record<number, string> = {};
@@ -86,9 +100,7 @@ export class GraduateDashboardComponent implements OnInit {
   }
 
   get nextSession(): SessionItem | undefined {
-    return this.sessions
-      .filter(s => s.status === 'PAID')
-      .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))[0];
+    return this.sessions.filter(s => s.status === 'PAID').sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))[0];
   }
 
   reviewEligibleSessions(): SessionItem[] {
@@ -106,32 +118,19 @@ export class GraduateDashboardComponent implements OnInit {
     });
   }
 
-  loadNotifications() {
-    this.api.notifications().subscribe({ next: r => this.notifications = r.data });
-  }
-
+  loadNotifications() { this.api.notifications().subscribe({ next: r => this.notifications = r.data }); }
   read(id: number) { this.api.markNotificationRead(id).subscribe(() => this.loadNotifications()); }
 
-  cancel(id: number) {
-    this.api.cancelSession(id).subscribe({
-      next: () => this.load(),
-      error: (e) => this.message = e.error?.message ?? 'Cancel failed'
-    });
+  viewMentor(mentorUserId: number) {
+    this.api.getMentorByUserId(mentorUserId).subscribe({ next: r => this.selectedMentor = r.data });
   }
 
-  complete(id: number) {
-    this.api.completeSession(id).subscribe({
-      next: () => { this.message = 'Session marked complete'; this.load(); },
-      error: (e) => this.message = e.error?.message ?? 'Complete failed'
-    });
-  }
+  cancel(id: number) { this.api.cancelSession(id).subscribe({ next: () => this.load(), error: (e) => this.message = e.error?.message ?? 'Cancel failed' }); }
+  complete(id: number) { this.api.completeSession(id).subscribe({ next: () => { this.message = 'Session marked complete'; this.load(); }, error: (e) => this.message = e.error?.message ?? 'Complete failed' }); }
 
   pay(id: number) {
     this.api.pay(id).subscribe({
-      next: () => {
-        this.message = 'Payment successful. Meeting link generated.';
-        this.load();
-      },
+      next: () => { this.message = 'Payment successful. Meeting link generated.'; this.load(); },
       error: (e) => this.message = e.error?.message ?? 'Payment failed'
     });
   }
@@ -141,10 +140,7 @@ export class GraduateDashboardComponent implements OnInit {
       newScheduledTime: this.rescheduleTime[sessionId],
       newDurationMinutes: Number(this.rescheduleDuration[sessionId] || 60),
       reason: this.rescheduleReason[sessionId] || 'Need to move due to schedule conflict'
-    }).subscribe({
-      next: () => this.message = 'Reschedule requested',
-      error: (e) => this.message = e.error?.message ?? 'Reschedule failed'
-    });
+    }).subscribe({ next: () => this.message = 'Reschedule requested', error: (e) => this.message = e.error?.message ?? 'Reschedule failed' });
   }
 
   submitReview(sessionId: number) {
@@ -154,9 +150,6 @@ export class GraduateDashboardComponent implements OnInit {
       this.message = 'Please provide rating (1-5) and comment';
       return;
     }
-    this.api.createReview({ sessionId, rating, comment }).subscribe({
-      next: () => { this.message = 'Review submitted'; this.load(); },
-      error: (e) => this.message = e.error?.message ?? 'Review failed'
-    });
+    this.api.createReview({ sessionId, rating, comment }).subscribe({ next: () => { this.message = 'Review submitted'; this.load(); }, error: (e) => this.message = e.error?.message ?? 'Review failed' });
   }
 }
